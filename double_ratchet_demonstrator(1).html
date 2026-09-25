@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Démonstrateur Double Ratchet - Soutenance Orale</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            dark: '#080b11',
+                            panel: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155',
+                            neonGreen: '#00ff88',
+                            neonCyan: '#00e5ff',
+                            neonMagenta: '#ff2a85',
+                            neonYellow: '#ffcc00'
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'monospace'],
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+        
+        body {
+            background-color: #080b11;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+        }
+
+        .glow-green { filter: drop-shadow(0 0 12px rgba(0, 255, 136, 0.4)); }
+        .glow-cyan { filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.4)); }
+        .glow-magenta { filter: drop-shadow(0 0 12px rgba(255, 42, 133, 0.4)); }
+
+        .ratchet-transition { transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .pawl-transition { transition: transform 0.12s ease-in-out; }
+
+        /* Slide Transition Effects */
+        .step-container {
+            animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nav-btn-active {
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-cyber-dark text-slate-100 overflow-x-hidden">
+
+    <!-- TOP HEADER & MODULE SWITCHER -->
+    <header class="border-b border-cyber-border/80 bg-cyber-panel/90 backdrop-blur sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-cyber-card rounded-xl border border-cyber-neonGreen/40 glow-green">
+                    <svg class="w-6 h-6 text-cyber-neonGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-wide bg-gradient-to-r from-cyber-neonGreen via-cyber-neonCyan to-cyber-neonMagenta bg-clip-text text-transparent">
+                        DOUBLE RATCHET
+                    </h1>
+                    <p class="text-xs text-slate-400 font-mono">Support de Présentation Orale</p>
+                </div>
+            </div>
+
+            <!-- Module Navigation Tabs -->
+            <nav class="flex flex-wrap justify-center gap-2 bg-cyber-dark/80 p-1.5 rounded-2xl border border-cyber-border">
+                <button onclick="setModule(0)" id="mod-tab-0" class="px-4 py-2 rounded-xl text-xs font-bold transition-all">
+                    1. X3DH Handshake
+                </button>
+                <button onclick="setModule(1)" id="mod-tab-1" class="px-4 py-2 rounded-xl text-xs font-bold transition-all">
+                    2. Dynamic Ratchet
+                </button>
+                <button onclick="setModule(2)" id="mod-tab-2" class="px-4 py-2 rounded-xl text-xs font-bold transition-all">
+                    3. Forward Secrecy
+                </button>
+                <button onclick="setModule(3)" id="mod-tab-3" class="px-4 py-2 rounded-xl text-xs font-bold transition-all">
+                    4. Post-Compromise (PCS)
+                </button>
+            </nav>
+
+            <div class="hidden lg:flex items-center text-xs font-mono text-slate-400 gap-2 bg-cyber-panel px-3 py-1.5 rounded-lg border border-cyber-border">
+                <span>Navigation :</span>
+                <kbd class="px-2 py-0.5 bg-cyber-card rounded border border-cyber-border text-cyber-neonCyan">&larr;</kbd>
+                <kbd class="px-2 py-0.5 bg-cyber-card rounded border border-cyber-border text-cyber-neonCyan">&rarr;</kbd>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN PRESENTATION CANVAS -->
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 md:p-6 flex flex-col justify-between">
+
+        <!-- MECHANICAL RATCHET WHEEL HUD (Center top visual anchor) -->
+        <div class="bg-cyber-panel/60 border border-cyber-border rounded-2xl p-4 mb-6 flex items-center justify-between shadow-xl">
+            <div class="flex items-center space-x-4">
+                <div class="relative w-16 h-16 flex-shrink-0">
+                    <svg id="main-ratchet-wheel" class="w-full h-full transform transition-transform duration-500" viewBox="0 0 100 100">
+                        <g id="ratchet-teeth" fill="#0f172a" stroke="#00ff88" stroke-width="2.5"></g>
+                        <circle cx="50" cy="50" r="14" fill="#080b11" stroke="#00ff88" stroke-width="2.5"/>
+                        <circle cx="50" cy="50" r="5" fill="#00ff88"/>
+                    </svg>
+                    <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
+                        <path id="ratchet-pawl" d="M 68 28 L 52 38 L 70 42 Z" fill="#ffcc00" stroke="#ffcc00" stroke-width="1.5" class="pawl-transition"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-xs font-mono text-slate-400 uppercase tracking-wider">Mécanisme Actif</div>
+                    <div id="ratchet-status-label" class="text-sm font-bold text-cyber-neonGreen font-mono">Ratchet Symétrique KDF</div>
+                </div>
+            </div>
+
+            <!-- Step Progress Indicator -->
+            <div class="text-right border-l border-cyber-border pl-6">
+                <div class="text-xs font-mono text-slate-400">Étape Courante</div>
+                <div id="step-indicator" class="text-2xl font-black font-mono text-cyber-neonCyan">1 / 4</div>
+            </div>
+        </div>
+
+        <!-- DYNAMIC STEP VIEW AREA -->
+        <div id="presentation-viewport" class="flex-grow flex flex-col justify-center my-2">
+            <!-- Dynamic step contents rendered by JavaScript -->
+        </div>
+
+        <!-- PRESENTER SCRIPT CARD (What to say to the Jury) -->
+        <div class="mt-6 bg-cyber-panel border-l-4 border-cyber-neonCyan p-5 rounded-2xl shadow-2xl relative overflow-hidden">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold font-mono text-cyber-neonCyan uppercase tracking-widest flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h18"/></svg>
+                    Ce que vous devez dire à l'oral :
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 bg-cyber-dark px-2 py-0.5 rounded border border-cyber-border">Script Jury</span>
+            </div>
+            <p id="oral-script-text" class="text-base md:text-lg text-slate-100 font-medium leading-relaxed italic">
+                <!-- Script text dynamically populated -->
+            </p>
+        </div>
+
+    </main>
+
+    <!-- FOOTER CONTROLS (Big Step Forward / Back Buttons) -->
+    <footer class="border-t border-cyber-border bg-cyber-panel/90 px-6 py-4 sticky bottom-0 z-50">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            
+            <button onclick="prevStep()" id="btn-prev" class="px-6 py-3 bg-cyber-card hover:bg-slate-700 text-slate-200 border border-cyber-border rounded-xl font-bold text-sm flex items-center gap-2 transition-all">
+                &larr; Étape Précédente
+            </button>
+
+            <!-- Slide Dots -->
+            <div id="slide-dots" class="flex items-center space-x-2">
+                <!-- Dots populated dynamically -->
+            </div>
+
+            <button onclick="nextStep()" id="btn-next" class="px-8 py-3 bg-gradient-to-r from-cyber-neonCyan to-cyber-neonGreen hover:opacity-90 text-slate-950 font-black rounded-xl text-sm flex items-center gap-2 shadow-lg transition-all border-glow-green">
+                Étape Suivante &rarr;
+            </button>
+
+        </div>
+    </footer>
+
+    <script>
+        /* ================= PRESENTATION DATA STRUCTURE ================= */
+        const modules = [
+            /* MODULE 1: X3DH INITIALIZATION */
+            {
+                title: "1. Initialisation X3DH (Extended Triple Diffie-Hellman)",
+                steps: [
+                    {
+                        ratchetLabel: "X3DH - Pré-publication",
+                        ratchetColor: "#00e5ff",
+                        script: "Avant tout échange, Bob génère ses paires de clés asymétriques et dépose un 'Prekey Bundle' sur le serveur Signal. Bob peut alors se déconnecter.",
+                        render: () => `
+                            <div class="step-container grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                                <div class="bg-cyber-panel p-6 rounded-2xl border-2 border-cyber-neonCyan/50 space-y-4">
+                                    <div class="flex items-center justify-between border-b border-cyber-border pb-3">
+                                        <span class="font-bold text-cyber-neonCyan text-lg">Bob (Hors-Ligne)</span>
+                                        <span class="text-xs font-mono bg-cyber-dark px-2.5 py-1 rounded text-slate-300">Génération des clés</span>
+                                    </div>
+                                    <div class="space-y-2 font-mono text-xs">
+                                        <div class="p-3 bg-cyber-card rounded-xl border border-cyber-border flex justify-between">
+                                            <span class="text-slate-400">Identity Key (IK_B):</span>
+                                            <span class="text-cyber-neonGreen font-bold">ik_b_pub</span>
+                                        </div>
+                                        <div class="p-3 bg-cyber-card rounded-xl border border-cyber-border flex justify-between">
+                                            <span class="text-slate-400">Signed Prekey (SPK_B):</span>
+                                            <span class="text-cyber-neonCyan font-bold">spk_b_pub</span>
+                                        </div>
+                                        <div class="p-3 bg-cyber-card rounded-xl border border-cyber-border flex justify-between">
+                                            <span class="text-slate-400">One-Time Prekey (OPK_B):</span>
+                                            <span class="text-cyber-neonYellow font-bold">opk_b_pub</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-cyber-card p-6 rounded-2xl border border-cyber-border text-center space-y-4">
+                                    <div class="p-4 bg-cyber-panel rounded-xl border border-cyber-border space-y-2">
+                                        <div class="text-xs font-mono text-slate-400">Dépôt sur le Serveur Signal</div>
+                                        <div class="text-sm font-bold text-cyber-neonCyan">&rarr; Prekey Bundle de Bob &rarr;</div>
+                                    </div>
+                                    <p class="text-xs text-slate-400">Le serveur stocke ces clés publiques sans connaître les clés privées de Bob.</p>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        ratchetLabel: "X3DH - Récupération du Bundle",
+                        ratchetColor: "#00e5ff",
+                        script: "Alice souhaite envoyer le premier message. Elle contacte le serveur pour récupérer le Prekey Bundle de Bob et génère sa propre clé éphémère EK_A.",
+                        render: () => `
+                            <div class="step-container grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                                <div class="bg-cyber-panel p-6 rounded-2xl border-2 border-cyber-neonGreen space-y-4 glow-green">
+                                    <div class="flex items-center justify-between border-b border-cyber-border pb-3">
+                                        <span class="font-bold text-cyber-neonGreen text-lg">Alice (Émettrice)</span>
+                                        <span class="text-xs font-mono bg-cyber-dark px-2.5 py-1 rounded text-slate-300">En ligne</span>
+                                    </div>
+                                    <div class="p-3 bg-cyber-card rounded-xl border border-cyber-border font-mono text-xs space-y-1">
+                                        <span class="text-slate-400">Clé Éphémère Générée (EK_A):</span>
+                                        <div class="text-cyber-neonGreen font-bold">ek_a_priv / EK_A_pub</div>
+                                    </div>
+                                    <div class="p-3 bg-cyber-card rounded-xl border border-cyber-neonCyan/40 text-xs font-mono">
+                                        <span class="text-cyber-neonCyan font-bold">&check; Bundle de Bob Téléchargé</span>
+                                    </div>
+                                </div>
+                                <div class="bg-cyber-card p-6 rounded-2xl border border-cyber-border space-y-3">
+                                    <h4 class="text-xs font-bold text-slate-400 uppercase">Serveur Relais</h4>
+                                    <p class="text-xs text-slate-300">Le serveur a fourni le paquet de clés et supprime la clé à usage unique OPK_B_1.</p>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        ratchetLabel: "X3DH - Calcul des 4 secrets DH",
+                        ratchetColor: "#a855f7",
+                        script: "Alice exécute jusqu'à 4 échanges Diffie-Hellman en combinant ses clés avec celles du bundle de Bob. Cela garantit l'authentification et la confidentialité.",
+                        render: () => `
+                            <div class="step-container space-y-6">
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-xs">
+                                    <div class="p-4 bg-cyber-card rounded-xl border-2 border-cyber-neonCyan text-center glow-cyan">
+                                        <div class="text-slate-400 text-[10px]">DH1</div>
+                                        <div class="font-bold text-cyber-neonCyan mt-1">DH(IK_A, SPK_B)</div>
+                                    </div>
+                                    <div class="p-4 bg-cyber-card rounded-xl border-2 border-cyber-neonCyan text-center glow-cyan">
+                                        <div class="text-slate-400 text-[10px]">DH2</div>
+                                        <div class="font-bold text-cyber-neonCyan mt-1">DH(EK_A, IK_B)</div>
+                                    </div>
+                                    <div class="p-4 bg-cyber-card rounded-xl border-2 border-cyber-neonCyan text-center glow-cyan">
+                                        <div class="text-slate-400 text-[10px]">DH3</div>
+                                        <div class="font-bold text-cyber-neonCyan mt-1">DH(EK_A, SPK_B)</div>
+                                    </div>
+                                    <div class="p-4 bg-cyber-card rounded-xl border-2 border-cyber-neonYellow text-center">
+                                        <div class="text-slate-400 text-[10px]">DH4</div>
+                                        <div class="font-bold text-cyber-neonYellow mt-1">DH(EK_A, OPK_B)</div>
+                                    </div>
+                                </div>
+                                <div class="bg-cyber-panel p-4 rounded-xl border border-cyber-border text-center text-xs text-slate-300">
+                                    Ces 4 secrets DH sont concaténés et injectés dans la fonction KDF racine.
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        ratchetLabel: "X3DH - Clé Racine SK_0 dérivée",
+                        ratchetColor: "#00ff88",
+                        spinWheel: true,
+                        script: "Le résultat donne la Clé Racine initiale (SK_0). Alice peut maintenant chiffrer son tout premier message. Le canal est initialisé !",
+                        render: () => `
+                            <div class="step-container bg-cyber-panel p-8 rounded-2xl border-2 border-cyber-neonGreen text-center space-y-4 glow-green">
+                                <span class="px-3 py-1 bg-cyber-neonGreen/20 text-cyber-neonGreen rounded-full text-xs font-mono font-bold border border-cyber-neonGreen/40">
+                                    Initialisation Réussie
+                                </span>
+                                <h3 class="text-xl font-bold text-white">Clé Racine Partagée (SK_0)</h3>
+                                <div class="p-4 bg-cyber-dark rounded-xl font-mono text-lg font-bold text-cyber-neonGreen border border-cyber-border">
+                                    0x7F9B_42E1_098A_3C5D
+                                </div>
+                                <p class="text-xs text-slate-400">Cette clé sert de point de départ au Double Ratchet pour le premier message.</p>
+                            </div>
+                        `
+                    }
+                ]
+            },
+
+            /* MODULE 2: DYNAMIC DOUBLE RATCHET SIMULATION */
+            {
+                title: "2. Conversation Simulée & Double Ratchet",
+                steps: [
+                    {
+                        ratchetLabel: "Ratchet Symétrique - Message 1 (Alice)",
+                        ratchetColor: "#00ff88",
+                        spinWheel: true,
+                        script: "Alice envoie son 1er message. La Clé de Chaîne passe dans le Ratchet Symétrique KDF pour dériver la Clé de Message MK1. La Clé Racine reste intacte.",
+                        render: () => `
+                            <div class="step-container grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                                <div class="bg-cyber-panel p-5 rounded-xl border border-cyber-neonGreen space-y-3">
+                                    <div class="text-xs font-mono text-cyber-neonGreen font-bold">Alice &rarr; Message #1</div>
+                                    <div class="p-3 bg-cyber-card rounded text-sm text-slate-200">"Bonjour Bob, le projet est prêt ?"</div>
+                                </div>
+                                <div class="bg-cyber-card p-5 rounded-xl border border-cyber-border font-mono text-xs space-y-2">
+                                    <div class="flex justify-between text-slate-400"><span>Chain Key (CK0):</span> <span>0xA13C88D4</span></div>
+                                    <div class="flex justify-between text-cyber-neonGreen font-bold"><span>&darr; KDF Symétrique</span> <span>Roue +1</span></div>
+                                    <div class="flex justify-between text-cyber-neonCyan font-bold"><span>Message Key (MK1):</span> <span>0x9922EE11</span></div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        ratchetLabel: "Ratchet Symétrique - Message 2 (Alice)",
+                        ratchetColor: "#00ff88",
+                        spinWheel: true,
+                        script: "Alice envoie un 2ème message consécutif. Comme c'est toujours Alice qui parle, seule la roue symétrique KDF tourne à nouveau pour dériver MK2.",
+                        render: () => `
+                            <div class="step-container grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                                <div class="bg-cyber-panel p-5 rounded-xl border border-cyber-neonGreen space-y-3">
+                                    <div class="text-xs font-mono text-cyber-neonGreen font-bold">Alice &rarr; Message #2 (Consécutif)</div>
+                                    <div class="p-3 bg-cyber-card rounded text-sm text-slate-200">"Je t'envoie le document sécurisé."</div>
+                                </div>
+                                <div class="bg-cyber-card p-5 rounded-xl border border-cyber-border font-mono text-xs space-y-2">
+                                    <div class="flex justify-between text-slate-400"><span>Chain Key (CK1):</span> <span>0xB44D99E2</span></div>
+                                    <div class="flex justify-between text-cyber-neonGreen font-bold"><span>&darr; KDF Symétrique</span> <span>Roue +1</span></div>
+                                    <div class="flex justify-between text-cyber-neonCyan font-bold"><span>Message Key (MK2):</span> <span>0x4488FF33</span></div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        ratchetLabel: "Ratchet Asymétrique DH - Réponse de Bob",
+                        ratchetColor: "#00e5ff",
+                        spinWheel: true,
+                        script: "Bob répond ! Le changement de sens de communication déclenche un Ratchet Diffie-Hellman. Une nouvelle Clé Racine (RK1) est calculée, réinitialisant la chaîne.",
+                        render: () => `
+                            <div class="step-container space-y-6">
+                                <div class="bg-cyber-panel p-5 rounded-xl border-2 border-cyber-neonCyan space-y-3 glow-cyan">
+                                    <div class="text-xs font-mono text-cyber-neonCyan font-bold">Bob &rarr; Réponse (Changement de tour de parole)</div>
+                                    <div class="p-3 bg-cyber-card rounded text-sm text-slate-200">"Bien reçu Alice, je regarde ça immédiatement."</div>
+                                </div>
+                                <div class="p-4 bg-cyber-dark rounded-xl border border-cyber-neonCyan font-mono text-xs flex justify-between items-center">
+                                    <span class="text-slate-400">Nouvelle Clé Racine (RK1):</span>
+                                    <span class="text-cyber-neonCyan font-bold text-sm">0xE551_0099_FFAB</span>
+                                </div>
+                            </div>
+                        `
+                    }
+                ]
+            },
+
+            /* MODULE 3: FORWARD SECRECY DEMO */
+            {
+                title: "3. Démonstration : Forward Secrecy (Confidentialité Persistante)",
+                steps: [
+                    {
+                        ratchetLabel: "Echange Normal (Message t=3)",
+                        ratchetColor: "#00ff88",
+                        script: "Trois messages ont été échangés. Chaque message a utilisé une clé de message différente dérivée par le ratchet KDF.",
+                        render: () => `
+                            <div class="step-container grid grid-cols-3 gap-4 font-mono text-xs">
+                                <div class="p-4 bg-cyber-panel rounded-xl border border-cyber-border text-center space-y-2">
+                                    <div class="text-cyber-neonGreen font-bold">Msg #1</div>
+                                    <div class="text-slate-400 text-[10px]">MK1: 0x1122</div>
+                                    <div class="text-slate-300 font-sans">"Rdv à 14h"</div>
+                                </div>
+                                <div class="p-4 bg-cyber-panel rounded-xl border border-cyber-border text-center space-y-2">
+                                    <div class="text-cyber-neonGreen font-bold">Msg #2</div>
+                                    <div class="text-slate-400 text-[10px]">MK2: 0x3344</div>
+                                    <div class="text-slate-300 font-sans">"Dossier joint"</div>
+                                </div>
+                                <div class="p-4 bg-cyber-panel rounded-xl border border-cyber-border text-center space-y-2">
+                                    <div class="text-cyber-neonGreen font-bold">Msg #3</div>
+                                    <div class="text-slate-400 text-[10px]">MK3: 0x5566</div>
+                                    <div class="text-slate-300 font-sans">"Code: 9482"</div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        ratchetLabel: "Attaque : Vol de la clé à t=3",
+                        ratchetColor: "#ff2a85",
+                        script: "À l'instant t=3, l'attaquant Eve réussit à compromettre le téléphone et dérobe la clé de message actuelle MK3.",
+                        render: () => `
+                            <div class="step-container bg-cyber-panel p-6 rounded-2xl border-2 border-cyber-neonMagenta text-center space-y-4 glow-magenta">
+                                <span class="px-3 py-1 bg-cyber-neonMagenta/20 text-cyber-neonMagenta rounded-full text-xs font-mono font-bold">
+                                    Compromission à t=3
+                                </span>
+                                <div class="text-lg font-bold text-white">Eve possède la clé MK3 (0x5566)</div>
+                                <p class="text-xs text-slate-300">Eve peut déchiffrer le Message #3 ("Code: 9482"). Mais qu'en est-il des messages #1 et #2 ?</p>
+                            </div>
+                        `
+                    },
+                    {
+                        ratchetLabel: "Propriété Physique du Rochet : Sens Unique",
+                        ratchetColor: "#ff2a85",
+                        script: "La fonction KDF étant à sens unique (hash), il est mathématiquement impossible d'inverser le rochet pour déduire MK1 ou MK2 à partir de MK3. Les messages passés restent indéchiffrables !",
+                        render: () => `
+                            <div class="step-container space-y-4">
+                                <div class="p-5 bg-cyber-dark rounded-xl border border-cyber-border font-mono text-xs flex items-center justify-between">
+                                    <span class="text-cyber-neonGreen">MK1 / MK2 (Passé)</span>
+                                    <span class="text-cyber-neonMagenta font-bold">&cross; Inversion Impossible &cross;</span>
+                                    <span class="text-cyber-neonMagenta">MK3 (Compromise)</span>
+                                </div>
+                                <div class="p-4 bg-cyber-panel rounded-xl border border-cyber-neonGreen text-center text-xs font-bold text-cyber-neonGreen">
+                                    &check; Forward Secrecy Garantie : Le passé de la conversation est protégé.
+                                </div>
+                            </div>
+                        `
+                    }
+                ]
+            },
+
+            /* MODULE 4: POST-COMPROMISE SECURITY DEMO */
+            {
+                title: "4. Démonstration : Post-Compromise Security (Autoguérison)",
+                steps: [
+                    {
+                        ratchetLabel: "Vol d'état complet à t=1",
+                        ratchetColor: "#ff2a85",
+                        script: "À l'instant t=1, l'attaquant vole l'intégralité de l'état mémoire d'Alice (Clé Racine RK0 et Clés de Chaîne). La sécurité est totalement compromise.",
+                        render: () => `
+                            <div class="step-container bg-cyber-panel p-6 rounded-2xl border-2 border-cyber-neonMagenta space-y-3 glow-magenta">
+                                <div class="text-xs font-mono text-cyber-neonMagenta font-bold uppercase">Attaque Totale</div>
+                                <div class="text-sm text-slate-200">Eve a copié l'état complet : <code class="text-cyber-neonMagenta">State_0 (RK0, CK0)</code></div>
+                                <p class="text-xs text-slate-400">À cet instant, Eve peut lire les messages de la chaîne courante.</p>
+                            </div>
+                        `
+                    },
+                    {
+                        ratchetLabel: "Prochain échange DH (Autoguérison)",
+                        ratchetColor: "#00e5ff",
+                        spinWheel: true,
+                        script: "Bob envoie un nouveau message et génère une nouvelle paire de clés DH éphémères. Un tour de Ratchet DH est exécuté.",
+                        render: () => `
+                            <div class="step-container bg-cyber-panel p-6 rounded-2xl border-2 border-cyber-neonCyan space-y-3 glow-cyan">
+                                <div class="text-xs font-mono text-cyber-neonCyan font-bold uppercase">Échange DH de Réparation</div>
+                                <div class="text-sm text-slate-200">Bob génère <code class="text-cyber-neonCyan">DH_Bob_Nouveau</code></div>
+                                <p class="text-xs text-slate-400">Calcul de la nouvelle Clé Racine : RK1 = KDF(RK0, DH(a, b_nouveau))</p>
+                            </div>
+                        `
+                    },
+                    {
+                        ratchetLabel: "Sécurité Restaurée : Eve Exclue !",
+                        ratchetColor: "#00ff88",
+                        script: "Eve ne possédant pas la clé privée du nouvel échange DH de Bob, elle ne peut pas dériver RK1. La sécurité est automatiquement réparée !",
+                        render: () => `
+                            <div class="step-container bg-cyber-panel p-6 rounded-2xl border-2 border-cyber-neonGreen text-center space-y-4 glow-green">
+                                <span class="px-3 py-1 bg-cyber-neonGreen/20 text-cyber-neonGreen rounded-full text-xs font-mono font-bold">
+                                    PCS Active
+                                </span>
+                                <h3 class="text-lg font-bold text-white">Eve est expulsée du canal !</h3>
+                                <p class="text-xs text-slate-300">Sans la clé privée de Bob, l'attaquant est incapable de calculer les futures clés de message.</p>
+                            </div>
+                        `
+                    }
+                ]
+            }
+        ];
+
+        /* ================= ENGINE STATE & NAVIGATION ================= */
+        let currentModuleIndex = 0;
+        let currentStepIndex = 0;
+        let wheelRotation = 0;
+
+        /* SVG Wheel Teeth Initialization */
+        function initWheelSVG() {
+            const container = document.getElementById('ratchet-teeth');
+            if (!container) return;
+            let pathD = "";
+            const cx = 50, cy = 50, rOuter = 40, rInner = 30, teeth = 12;
+
+            for (let i = 0; i < teeth; i++) {
+                const a1 = (i * 360 / teeth) * Math.PI / 180;
+                const a2 = ((i + 0.5) * 360 / teeth) * Math.PI / 180;
+                const a3 = ((i + 1) * 360 / teeth) * Math.PI / 180;
+
+                const x1 = cx + rOuter * Math.cos(a1);
+                const y1 = cy + rOuter * Math.sin(a1);
+                const x2 = cx + rInner * Math.cos(a2);
+                const y2 = cy + rInner * Math.sin(a2);
+                const x3 = cx + rOuter * Math.cos(a3);
+                const y3 = cy + rOuter * Math.sin(a3);
+
+                if (i === 0) pathD += `M ${x1} ${y1} `;
+                pathD += `L ${x2} ${y2} L ${x3} ${y3} `;
+            }
+            pathD += "Z";
+            container.innerHTML = `<path d="${pathD}" fill="#0f172a" stroke="#00ff88" stroke-width="2.5"/>`;
+        }
+
+        function triggerWheelAnimation() {
+            wheelRotation += 30;
+            const wheel = document.getElementById('main-ratchet-wheel');
+            const pawl = document.getElementById('ratchet-pawl');
+            if (wheel) wheel.style.transform = `rotate(${wheelRotation}deg)`;
+            if (pawl) {
+                pawl.style.transform = "translate(-3px, -3px) rotate(-12deg)";
+                setTimeout(() => { pawl.style.transform = "translate(0px, 0px) rotate(0deg)"; }, 120);
+            }
+        }
+
+        function renderCurrentStep() {
+            const mod = modules[currentModuleIndex];
+            const step = mod.steps[currentStepIndex];
+
+            // Render view canvas
+            const viewport = document.getElementById('presentation-viewport');
+            viewport.innerHTML = `
+                <div class="mb-4">
+                    <h2 class="text-sm font-mono text-cyber-neonCyan uppercase tracking-widest mb-1">${mod.title}</h2>
+                </div>
+                ${step.render()}
+            `;
+
+            // Update Script Box
+            document.getElementById('oral-script-text').innerText = `"${step.script}"`;
+
+            // Update HUD
+            document.getElementById('ratchet-status-label').innerText = step.ratchetLabel;
+            document.getElementById('ratchet-status-label').style.color = step.ratchetColor;
+            document.getElementById('step-indicator').innerText = `${currentStepIndex + 1} / ${mod.steps.length}`;
+
+            if (step.spinWheel) {
+                triggerWheelAnimation();
+            }
+
+            // Update Tabs UI
+            for (let i = 0; i < 4; i++) {
+                const tab = document.getElementById(`mod-tab-${i}`);
+                if (i === currentModuleIndex) {
+                    tab.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-cyber-neonCyan/20 text-cyber-neonCyan border border-cyber-neonCyan/50 nav-btn-active";
+                } else {
+                    tab.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white";
+                }
+            }
+
+            // Update Dots
+            const dotsContainer = document.getElementById('slide-dots');
+            dotsContainer.innerHTML = mod.steps.map((_, idx) => `
+                <span class="w-2.5 h-2.5 rounded-full transition-all ${idx === currentStepIndex ? 'bg-cyber-neonCyan w-6 glow-cyan' : 'bg-cyber-border'}"></span>
+            `).join('');
+
+            // Button States
+            document.getElementById('btn-prev').disabled = (currentModuleIndex === 0 && currentStepIndex === 0);
+            document.getElementById('btn-prev').style.opacity = (currentModuleIndex === 0 && currentStepIndex === 0) ? '0.4' : '1';
+        }
+
+        function setModule(idx) {
+            currentModuleIndex = idx;
+            currentStepIndex = 0;
+            renderCurrentStep();
+        }
+
+        function nextStep() {
+            const mod = modules[currentModuleIndex];
+            if (currentStepIndex < mod.steps.length - 1) {
+                currentStepIndex++;
+            } else if (currentModuleIndex < modules.length - 1) {
+                currentModuleIndex++;
+                currentStepIndex = 0;
+            }
+            renderCurrentStep();
+        }
+
+        function prevStep() {
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+            } else if (currentModuleIndex > 0) {
+                currentModuleIndex--;
+                currentStepIndex = modules[currentModuleIndex].steps.length - 1;
+            }
+            renderCurrentStep();
+        }
+
+        // Keyboard Shortcut Control
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextStep();
+            } else if (e.key === 'ArrowLeft') {
+                prevStep();
+            }
+        });
+
+        window.onload = () => {
+            initWheelSVG();
+            renderCurrentStep();
+        };
+    </script>
+</body>
+</html>
