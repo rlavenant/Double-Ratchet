@@ -5,7 +5,7 @@ const pcsChoiceStep = {
     ratchetLabel: "Sélection du scénario PCS",
     ratchetColor: "#9ca3af",
     render: () => `
-        <div class="step-container space-y-4">
+        <div class="step-container space-y-4 max-w-full">
             <div class="text-center mb-2">
                 <h3 class="text-base font-bold text-white">Quelle clé a été compromise ?</h3>
                 <p class="text-xs text-slate-400">La nature de la clé volée détermine si le canal peut s'auto-guérir, et en combien de temps.</p>
@@ -45,28 +45,28 @@ const modules = [
                 ratchetLabel: "X3DH - Publication des clés (Bob)",
                 ratchetColor: "#00e5ff",
                 render: () => `
-                    <div class="step-container grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                        <div class="bg-cyber-panel p-6 rounded-2xl border border-cyber-neonCyan/50 space-y-4">
+                    <div class="step-container grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-center">
+                        <div class="bg-cyber-panel p-4 sm:p-6 rounded-2xl border border-cyber-neonCyan/50 space-y-4">
                             <div class="flex items-center justify-between border-b border-cyber-border pb-3">
                                 <span class="font-bold text-cyber-neonCyan text-base">Bob (Hors-Ligne)</span>
                                 <span class="text-[10px] font-mono bg-cyber-bg px-2 py-0.5 rounded text-slate-400">Génération des paires</span>
                             </div>
                             <div class="space-y-2 font-mono text-xs">
-                                <div class="p-3 bg-cyber-card rounded-xl border border-cyber-border flex justify-between">
-                                    <span class="text-slate-400">Identity Key (IK_B):</span>
-                                    <span class="text-cyber-neonGreen font-bold">ik_b_pub</span>
+                                <div class="p-3 bg-cyber-card rounded-xl border border-cyber-border flex justify-between gap-2">
+                                    <span class="text-slate-400 truncate">Identity Key (IK_B):</span>
+                                    <span class="text-cyber-neonGreen font-bold flex-shrink-0">ik_b_pub</span>
                                 </div>
-                                <div class="p-3 bg-cyber-card rounded-xl border border-cyber-border flex justify-between">
-                                    <span class="text-slate-400">Signed Prekey (SPK_B):</span>
-                                    <span class="text-cyber-neonCyan font-bold">spk_b_pub</span>
+                                <div class="p-3 bg-cyber-card rounded-xl border border-cyber-border flex justify-between gap-2">
+                                    <span class="text-slate-400 truncate">Signed Prekey (SPK_B):</span>
+                                    <span class="text-cyber-neonCyan font-bold flex-shrink-0">spk_b_pub</span>
                                 </div>
-                                <div class="p-3 bg-cyber-card rounded-xl border border-cyber-border flex justify-between">
-                                    <span class="text-slate-400">One-Time Prekey (OPK_B):</span>
-                                    <span class="text-cyber-neonAmber font-bold">opk_b_pub</span>
+                                <div class="p-3 bg-cyber-card rounded-xl border border-cyber-border flex justify-between gap-2">
+                                    <span class="text-slate-400 truncate">One-Time Prekey (OPK_B):</span>
+                                    <span class="text-cyber-neonAmber font-bold flex-shrink-0">opk_b_pub</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-cyber-card p-6 rounded-2xl border border-cyber-border text-center space-y-3">
+                        <div class="bg-cyber-card p-4 sm:p-6 rounded-2xl border border-cyber-border text-center space-y-3">
                             <div class="p-4 bg-cyber-panel rounded-xl border border-cyber-border space-y-2">
                                 <div class="text-xs font-mono text-slate-400">Dépôt sur le Serveur Central</div>
                                 <div class="text-sm font-bold text-cyber-neonCyan">&rarr; Prekey Bundle de Bob &rarr;</div>
@@ -80,23 +80,23 @@ const modules = [
                 ratchetLabel: "X3DH - Récupération du Bundle (Alice)",
                 ratchetColor: "#00e5ff",
                 render: () => `
-                    <div class="step-container grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                        <div class="bg-cyber-panel p-6 rounded-2xl border border-cyber-neonGreen space-y-4 glow-green">
+                    <div class="step-container grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-center">
+                        <div class="bg-cyber-panel p-4 sm:p-6 rounded-2xl border border-cyber-neonGreen space-y-4 glow-green">
                             <div class="flex items-center justify-between border-b border-cyber-border pb-3">
                                 <span class="font-bold text-cyber-neonGreen text-base">Alice (Initiatrice)</span>
                                 <span class="text-[10px] font-mono bg-cyber-bg px-2 py-0.5 rounded text-slate-400">En ligne</span>
                             </div>
                             <div class="p-3 bg-cyber-card rounded-xl border border-cyber-border font-mono text-xs space-y-1">
                                 <span class="text-slate-400">Clé Éphémère Générée (EK_A):</span>
-                                <div class="text-cyber-neonGreen font-bold">ek_a_priv / EK_A_pub</div>
+                                <div class="text-cyber-neonGreen font-bold break-all">ek_a_priv / EK_A_pub</div>
                             </div>
                             <div class="p-3 bg-cyber-card rounded-xl border border-cyber-neonCyan/40 text-xs font-mono">
                                 <span class="text-cyber-neonCyan font-bold">&check; Prekey Bundle de Bob Téléchargé</span>
                             </div>
                         </div>
-                        <div class="bg-cyber-card p-6 rounded-2xl border border-cyber-border space-y-3">
+                        <div class="bg-cyber-card p-4 sm:p-6 rounded-2xl border border-cyber-border space-y-3">
                             <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Serveur Intermédiaire</h4>
-                            <p class="text-xs text-slate-300">Le serveur remet le bundle de Bob à Alice. La clé à usage unique <code class="text-cyber-neonAmber">OPK_B</code> sera consommée et supprimée du serveur.</p>
+                            <p class="text-xs text-slate-300">Le serveur remet le bundle de Bob à Alice. La clé à usage unique <code class="text-cyber-neonAmber break-all">OPK_B</code> sera consommée et supprimée du serveur.</p>
                         </div>
                     </div>
                 `
@@ -105,23 +105,23 @@ const modules = [
                 ratchetLabel: "X3DH - Échanges Diffie-Hellman",
                 ratchetColor: "#a855f7",
                 render: () => `
-                    <div class="step-container space-y-6">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-xs">
-                            <div class="p-4 bg-cyber-card rounded-xl border border-cyber-neonCyan text-center glow-cyan">
+                    <div class="step-container space-y-4 sm:space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 font-mono text-xs">
+                            <div class="p-3 sm:p-4 bg-cyber-card rounded-xl border border-cyber-neonCyan text-center glow-cyan">
                                 <div class="text-slate-400 text-[10px]">DH1 (Authentification)</div>
-                                <div class="font-bold text-cyber-neonCyan mt-1">DH(IK_A, SPK_B)</div>
+                                <div class="font-bold text-cyber-neonCyan mt-1 break-all">DH(IK_A, SPK_B)</div>
                             </div>
-                            <div class="p-4 bg-cyber-card rounded-xl border border-cyber-neonCyan text-center glow-cyan">
+                            <div class="p-3 sm:p-4 bg-cyber-card rounded-xl border border-cyber-neonCyan text-center glow-cyan">
                                 <div class="text-slate-400 text-[10px]">DH2 (Identité/Éphémère)</div>
-                                <div class="font-bold text-cyber-neonCyan mt-1">DH(EK_A, IK_B)</div>
+                                <div class="font-bold text-cyber-neonCyan mt-1 break-all">DH(EK_A, IK_B)</div>
                             </div>
-                            <div class="p-4 bg-cyber-card rounded-xl border border-cyber-neonCyan text-center glow-cyan">
+                            <div class="p-3 sm:p-4 bg-cyber-card rounded-xl border border-cyber-neonCyan text-center glow-cyan">
                                 <div class="text-slate-400 text-[10px]">DH3 (Confidentialité)</div>
-                                <div class="font-bold text-cyber-neonCyan mt-1">DH(EK_A, SPK_B)</div>
+                                <div class="font-bold text-cyber-neonCyan mt-1 break-all">DH(EK_A, SPK_B)</div>
                             </div>
-                            <div class="p-4 bg-cyber-card rounded-xl border border-cyber-neonAmber text-center">
+                            <div class="p-3 sm:p-4 bg-cyber-card rounded-xl border border-cyber-neonAmber text-center">
                                 <div class="text-slate-400 text-[10px]">DH4 (Anti-Replay)</div>
-                                <div class="font-bold text-cyber-neonAmber mt-1">DH(EK_A, OPK_B)</div>
+                                <div class="font-bold text-cyber-neonAmber mt-1 break-all">DH(EK_A, OPK_B)</div>
                             </div>
                         </div>
                         <div class="bg-cyber-panel p-4 rounded-xl border border-cyber-border text-center text-xs text-slate-300">
@@ -135,12 +135,12 @@ const modules = [
                 ratchetColor: "#00ff88",
                 spin: 'both',
                 render: () => `
-                    <div class="step-container bg-cyber-panel p-8 rounded-2xl border border-cyber-neonGreen text-center space-y-4 glow-green">
-                        <span class="px-3 py-1 bg-cyber-neonGreen/20 text-cyber-neonGreen rounded-full text-xs font-mono font-bold border border-cyber-neonGreen/40">
+                    <div class="step-container bg-cyber-panel p-6 sm:p-8 rounded-2xl border border-cyber-neonGreen text-center space-y-4 glow-green">
+                        <span class="px-3 py-1 bg-cyber-neonGreen/20 text-cyber-neonGreen rounded-full text-xs font-mono font-bold border border-cyber-neonGreen/40 inline-block">
                             Initialisation Terminée
                         </span>
                         <h3 class="text-lg font-bold text-white">Clé Racine Partagée (SK_0)</h3>
-                        <div class="p-4 bg-cyber-bg rounded-xl font-mono text-base md:text-lg font-bold text-cyber-neonGreen border border-cyber-border">
+                        <div class="p-4 bg-cyber-bg rounded-xl font-mono text-sm sm:text-base md:text-lg font-bold text-cyber-neonGreen border border-cyber-border break-all">
                             0x7F9B_42E1_098A_3C5D
                         </div>
                         <p class="text-xs text-slate-400">Alice et Bob disposent du même secret initial pour amorcer le Double Ratchet.</p>
@@ -159,18 +159,18 @@ const modules = [
                 ratchetColor: "#00ff88",
                 spin: 'sym',
                 render: () => `
-                    <div class="step-container grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                        <div class="bg-cyber-panel p-5 rounded-2xl border border-cyber-neonGreen space-y-3">
-                            <div class="text-xs font-mono text-cyber-neonGreen font-bold flex justify-between">
+                    <div class="step-container grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-center">
+                        <div class="bg-cyber-panel p-4 sm:p-5 rounded-2xl border border-cyber-neonGreen space-y-3">
+                            <div class="text-xs font-mono text-cyber-neonGreen font-bold flex justify-between gap-2">
                                 <span>Alice &rarr; Message #1</span>
-                                <span class="text-slate-400">Ratchet Symétrique</span>
+                                <span class="text-slate-400 flex-shrink-0">Ratchet Symétrique</span>
                             </div>
-                            <div class="p-3 bg-cyber-card rounded-xl text-sm text-slate-200 border border-cyber-border">"Bonjour Bob, le projet avance ?"</div>
+                            <div class="p-3 bg-cyber-card rounded-xl text-sm text-slate-200 border border-cyber-border break-words">"Bonjour Bob, le projet avance ?"</div>
                         </div>
-                        <div class="bg-cyber-card p-5 rounded-2xl border border-cyber-border font-mono text-xs space-y-2.5">
-                            <div class="flex justify-between text-slate-400"><span>Chain Key (CK_0):</span> <span class="text-slate-200">0xA13C88D4</span></div>
-                            <div class="flex justify-between text-cyber-neonGreen font-bold"><span>&darr; KDF Symétrique</span> <span>Roue +1</span></div>
-                            <div class="flex justify-between text-cyber-neonCyan font-bold"><span>Message Key (MK_1):</span> <span class="text-cyber-neonCyan">0x9922EE11</span></div>
+                        <div class="bg-cyber-card p-4 sm:p-5 rounded-2xl border border-cyber-border font-mono text-xs space-y-2.5">
+                            <div class="flex justify-between gap-2 text-slate-400"><span class="truncate">Chain Key (CK_0):</span> <span class="text-slate-200 flex-shrink-0">0xA13C88D4</span></div>
+                            <div class="flex justify-between gap-2 text-cyber-neonGreen font-bold"><span>&darr; KDF Symétrique</span> <span>Roue +1</span></div>
+                            <div class="flex justify-between gap-2 text-cyber-neonCyan font-bold"><span class="truncate">Message Key (MK_1):</span> <span class="text-cyber-neonCyan flex-shrink-0">0x9922EE11</span></div>
                         </div>
                     </div>
                 `
@@ -180,18 +180,18 @@ const modules = [
                 ratchetColor: "#00ff88",
                 spin: 'sym',
                 render: () => `
-                    <div class="step-container grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                        <div class="bg-cyber-panel p-5 rounded-2xl border border-cyber-neonGreen space-y-3">
-                            <div class="text-xs font-mono text-cyber-neonGreen font-bold flex justify-between">
+                    <div class="step-container grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-center">
+                        <div class="bg-cyber-panel p-4 sm:p-5 rounded-2xl border border-cyber-neonGreen space-y-3">
+                            <div class="text-xs font-mono text-cyber-neonGreen font-bold flex justify-between gap-2">
                                 <span>Alice &rarr; Message #2 (Consécutif)</span>
-                                <span class="text-slate-400">Même chaîne KDF</span>
+                                <span class="text-slate-400 flex-shrink-0">Même chaîne KDF</span>
                             </div>
-                            <div class="p-3 bg-cyber-card rounded-xl text-sm text-slate-200 border border-cyber-border">"Je t'envoie le document sécurisé."</div>
+                            <div class="p-3 bg-cyber-card rounded-xl text-sm text-slate-200 border border-cyber-border break-words">"Je t'envoie le document sécurisé."</div>
                         </div>
-                        <div class="bg-cyber-card p-5 rounded-2xl border border-cyber-border font-mono text-xs space-y-2.5">
-                            <div class="flex justify-between text-slate-400"><span>Chain Key (CK_1):</span> <span class="text-slate-200">0xB44D99E2</span></div>
-                            <div class="flex justify-between text-cyber-neonGreen font-bold"><span>&darr; KDF Symétrique</span> <span>Roue +1</span></div>
-                            <div class="flex justify-between text-cyber-neonCyan font-bold"><span>Message Key (MK_2):</span> <span class="text-cyber-neonCyan">0x4488FF33</span></div>
+                        <div class="bg-cyber-card p-4 sm:p-5 rounded-2xl border border-cyber-border font-mono text-xs space-y-2.5">
+                            <div class="flex justify-between gap-2 text-slate-400"><span class="truncate">Chain Key (CK_1):</span> <span class="text-slate-200 flex-shrink-0">0xB44D99E2</span></div>
+                            <div class="flex justify-between gap-2 text-cyber-neonGreen font-bold"><span>&darr; KDF Symétrique</span> <span>Roue +1</span></div>
+                            <div class="flex justify-between gap-2 text-cyber-neonCyan font-bold"><span class="truncate">Message Key (MK_2):</span> <span class="text-cyber-neonCyan flex-shrink-0">0x4488FF33</span></div>
                         </div>
                     </div>
                 `
@@ -201,17 +201,17 @@ const modules = [
                 ratchetColor: "#00e5ff",
                 spin: 'dh',
                 render: () => `
-                    <div class="step-container space-y-5">
-                        <div class="bg-cyber-panel p-5 rounded-2xl border border-cyber-neonCyan space-y-3 glow-cyan">
-                            <div class="text-xs font-mono text-cyber-neonCyan font-bold flex justify-between">
+                    <div class="step-container space-y-4 sm:space-y-5">
+                        <div class="bg-cyber-panel p-4 sm:p-5 rounded-2xl border border-cyber-neonCyan space-y-3 glow-cyan">
+                            <div class="text-xs font-mono text-cyber-neonCyan font-bold flex justify-between gap-2">
                                 <span>Bob &rarr; Réponse (Changement de tour)</span>
-                                <span class="text-cyber-neonCyan">Nouveau Ratchet DH</span>
+                                <span class="text-cyber-neonCyan flex-shrink-0">Nouveau Ratchet DH</span>
                             </div>
-                            <div class="p-3 bg-cyber-card rounded-xl text-sm text-slate-200 border border-cyber-border">"Bien reçu Alice, je regarde ça immédiatement."</div>
+                            <div class="p-3 bg-cyber-card rounded-xl text-sm text-slate-200 border border-cyber-border break-words">"Bien reçu Alice, je regarde ça immédiatement."</div>
                         </div>
-                        <div class="p-4 bg-cyber-bg rounded-2xl border border-cyber-neonCyan font-mono text-xs flex justify-between items-center">
-                            <span class="text-slate-400">Nouvelle Clé Racine (RK_1):</span>
-                            <span class="text-cyber-neonCyan font-bold text-sm">0xE551_0099_FFAB</span>
+                        <div class="p-4 bg-cyber-bg rounded-2xl border border-cyber-neonCyan font-mono text-xs flex justify-between items-center gap-2">
+                            <span class="text-slate-400 truncate">Nouvelle Clé Racine (RK_1):</span>
+                            <span class="text-cyber-neonCyan font-bold text-xs sm:text-sm break-all">0xE551_0099_FFAB</span>
                         </div>
                     </div>
                 `
@@ -230,18 +230,18 @@ const modules = [
                     <div class="step-container grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
                         <div class="p-4 bg-cyber-panel rounded-2xl border border-cyber-border text-center space-y-2">
                             <div class="text-cyber-neonGreen font-bold">Message t=1</div>
-                            <div class="text-slate-400 text-[10px]">MK_1: 0x1122</div>
-                            <div class="text-slate-300 font-sans text-xs">"Rdv à 14h"</div>
+                            <div class="text-slate-400 text-[10px] break-all">MK_1: 0x1122</div>
+                            <div class="text-slate-300 font-sans text-xs break-words">"Rdv à 14h"</div>
                         </div>
                         <div class="p-4 bg-cyber-panel rounded-2xl border border-cyber-border text-center space-y-2">
                             <div class="text-cyber-neonGreen font-bold">Message t=2</div>
-                            <div class="text-slate-400 text-[10px]">MK_2: 0x3344</div>
-                            <div class="text-slate-300 font-sans text-xs">"Fichier joint"</div>
+                            <div class="text-slate-400 text-[10px] break-all">MK_2: 0x3344</div>
+                            <div class="text-slate-300 font-sans text-xs break-words">"Fichier joint"</div>
                         </div>
                         <div class="p-4 bg-cyber-panel rounded-2xl border border-cyber-border text-center space-y-2">
                             <div class="text-cyber-neonGreen font-bold">Message t=3</div>
-                            <div class="text-slate-400 text-[10px]">MK_3: 0x5566</div>
-                            <div class="text-slate-300 font-sans text-xs">"Code: 9482"</div>
+                            <div class="text-slate-400 text-[10px] break-all">MK_3: 0x5566</div>
+                            <div class="text-slate-300 font-sans text-xs break-words">"Code: 9482"</div>
                         </div>
                     </div>
                 `
@@ -251,10 +251,10 @@ const modules = [
                 ratchetColor: "#ff2a85",
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonRose text-center space-y-4 glow-rose">
-                        <span class="px-3 py-1 bg-cyber-neonRose/20 text-cyber-neonRose rounded-full text-xs font-mono font-bold">
+                        <span class="px-3 py-1 bg-cyber-neonRose/20 text-cyber-neonRose rounded-full text-xs font-mono font-bold inline-block">
                             Vol de la clé MK_3
                         </span>
-                        <div class="text-base font-bold text-white">L'attaquant obtient MK_3 (0x5566)</div>
+                        <div class="text-base font-bold text-white break-words">L'attaquant obtient MK_3 (0x5566)</div>
                         <p class="text-xs text-slate-300">Seul le Message #3 est déchiffrable à cet instant.</p>
                     </div>
                 `
@@ -264,7 +264,7 @@ const modules = [
                 ratchetColor: "#ff2a85",
                 render: () => `
                     <div class="step-container space-y-4">
-                        <div class="p-5 bg-cyber-bg rounded-2xl border border-cyber-border font-mono text-xs flex items-center justify-between">
+                        <div class="p-4 sm:p-5 bg-cyber-bg rounded-2xl border border-cyber-border font-mono text-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
                             <span class="text-cyber-neonGreen font-bold">MK_1 & MK_2 (Passé)</span>
                             <span class="text-cyber-neonRose font-bold">&cross; Fonction Hash Inadmissible &cross;</span>
                             <span class="text-cyber-neonRose font-bold">MK_3 (Compromis)</span>
@@ -294,7 +294,7 @@ const pcsScenarios = {
                 ratchetColor: "#ff2a85",
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonRose text-center space-y-4 glow-rose">
-                        <span class="px-3 py-1 bg-cyber-neonRose/20 text-cyber-neonRose rounded-full text-xs font-mono font-bold">Vol de MK_3</span>
+                        <span class="px-3 py-1 bg-cyber-neonRose/20 text-cyber-neonRose rounded-full text-xs font-mono font-bold inline-block">Vol de MK_3</span>
                         <div class="text-base font-bold text-white">L'attaquant obtient uniquement MK_3</div>
                         <p class="text-xs text-slate-300">CK, RK et les clés DH en cours restent hors de sa portée.</p>
                     </div>
@@ -305,7 +305,7 @@ const pcsScenarios = {
                 ratchetColor: "#00ff88",
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonGreen text-center space-y-4 glow-green">
-                        <span class="px-3 py-1 bg-cyber-neonGreen/20 text-cyber-neonGreen rounded-full text-xs font-mono font-bold">PCS trivialement respectée</span>
+                        <span class="px-3 py-1 bg-cyber-neonGreen/20 text-cyber-neonGreen rounded-full text-xs font-mono font-bold inline-block">PCS trivialement respectée</span>
                         <h3 class="text-base font-bold text-white">Message #4 déjà protégé</h3>
                         <p class="text-xs text-slate-300">MK_3 est jetée après usage et ne permet pas de dériver CK_3 ni MK_4 (fonction à sens unique). L'attaquant n'a jamais eu accès à l'état de la chaîne : il n'y a rien à réparer.</p>
                     </div>
@@ -321,7 +321,7 @@ const pcsScenarios = {
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonRose space-y-3 glow-rose">
                         <div class="text-xs font-mono text-cyber-neonRose font-bold uppercase">Compromission de la chaîne d'envoi</div>
-                        <div class="text-sm text-slate-200">L'attaquant obtient <code class="text-cyber-neonRose">CK_3</code> : il peut désormais dériver lui-même <code class="text-cyber-neonRose">MK_4, MK_5, ...</code> tant que la chaîne ne change pas.</div>
+                        <div class="text-sm text-slate-200">L'attaquant obtient <code class="text-cyber-neonRose break-all">CK_3</code> : il peut désormais dériver lui-même <code class="text-cyber-neonRose break-all">MK_4, MK_5, ...</code> tant que la chaîne ne change pas.</div>
                         <p class="text-xs text-slate-400">Contrairement au vol d'une simple MK, tous les messages futurs de cette chaîne sont ici menacés.</p>
                     </div>
                 `
@@ -333,7 +333,7 @@ const pcsScenarios = {
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonCyan space-y-3 glow-cyan">
                         <div class="text-xs font-mono text-cyber-neonCyan font-bold uppercase">Changement de tour d'écriture</div>
-                        <div class="text-sm text-slate-200">Dès que Bob répond, une nouvelle paire DH est générée et une nouvelle <code class="text-cyber-neonCyan">RK</code> est dérivée à partir de secrets jamais vus par l'attaquant.</div>
+                        <div class="text-sm text-slate-200">Dès que Bob répond, une nouvelle paire DH est générée et une nouvelle <code class="text-cyber-neonCyan break-all">RK</code> est dérivée à partir de secrets jamais vus par l'attaquant.</div>
                         <p class="text-xs text-slate-400">CK_3 devient inutile : elle n'appartenait qu'à l'ancienne chaîne, abandonnée.</p>
                     </div>
                 `
@@ -343,7 +343,7 @@ const pcsScenarios = {
                 ratchetColor: "#00ff88",
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonGreen text-center space-y-4 glow-green">
-                        <span class="px-3 py-1 bg-cyber-neonGreen/20 text-cyber-neonGreen rounded-full text-xs font-mono font-bold">PCS Active</span>
+                        <span class="px-3 py-1 bg-cyber-neonGreen/20 text-cyber-neonGreen rounded-full text-xs font-mono font-bold inline-block">PCS Active</span>
                         <h3 class="text-base font-bold text-white">Sécurité restaurée dès le tour suivant</h3>
                         <p class="text-xs text-slate-300">Les clés DH d'Alice et de Bob n'ayant jamais été compromises, l'attaquant ne peut pas suivre le nouveau tour de ratchet. Un seul changement de sens suffit à l'exclure.</p>
                     </div>
@@ -359,7 +359,7 @@ const pcsScenarios = {
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonPurple space-y-3">
                         <div class="text-xs font-mono text-cyber-neonPurple font-bold uppercase">Compromission de RK_2</div>
-                        <div class="text-sm text-slate-200">L'attaquant obtient <code class="text-cyber-neonPurple">RK_2</code>, mais ni une <code class="text-cyber-neonPurple">CK</code> active, ni une clé privée DH.</div>
+                        <div class="text-sm text-slate-200">L'attaquant obtient <code class="text-cyber-neonPurple break-all">RK_2</code>, mais ni une <code class="text-cyber-neonPurple break-all">CK</code> active, ni une clé privée DH.</div>
                         <p class="text-xs text-slate-400">RK seule ne donne accès à aucune clé de message : elle ne sert qu'à dériver la prochaine RK, et seulement si on connaît aussi le futur secret DH.</p>
                     </div>
                 `
@@ -371,7 +371,7 @@ const pcsScenarios = {
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonCyan space-y-3 glow-cyan">
                         <div class="text-xs font-mono text-cyber-neonCyan font-bold uppercase">Nouveau secret DH</div>
-                        <div class="text-sm text-slate-200">RK_3 = KDF(RK_2, DH(a, b_nouveau)) : ce calcul exige une des deux clés privées DH, qu'il ne possède pas.</div>
+                        <div class="text-sm text-slate-200 break-words">RK_3 = KDF(RK_2, DH(a, b_nouveau)) : ce calcul exige une des deux clés privées DH, qu'il ne possède pas.</div>
                         <p class="text-xs text-slate-400">RK_2 seule est donc insuffisante pour suivre la suite de la conversation.</p>
                     </div>
                 `
@@ -381,7 +381,7 @@ const pcsScenarios = {
                 ratchetColor: "#00ff88",
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonGreen text-center space-y-4 glow-green">
-                        <span class="px-3 py-1 bg-cyber-neonGreen/20 text-cyber-neonGreen rounded-full text-xs font-mono font-bold">PCS Active</span>
+                        <span class="px-3 py-1 bg-cyber-neonGreen/20 text-cyber-neonGreen rounded-full text-xs font-mono font-bold inline-block">PCS Active</span>
                         <h3 class="text-base font-bold text-white">Sécurité restaurée dès le tour suivant</h3>
                         <p class="text-xs text-slate-300">Comme pour CK, une clé racine sans clé DH associée ne suffit jamais à suivre la conversation au-delà du prochain tour.</p>
                     </div>
@@ -409,7 +409,7 @@ const pcsScenarios = {
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonCyan space-y-3 glow-cyan">
                         <div class="text-xs font-mono text-cyber-neonCyan font-bold uppercase">Bob renouvelle sa clé</div>
-                        <div class="text-sm text-slate-200">Bob injecte une nouvelle éphémère <code class="text-cyber-neonCyan">b_nouveau</code>. RK_1 = KDF(RK_0, DH(a, b_nouveau)).</div>
+                        <div class="text-sm text-slate-200 break-words">Bob injecte une nouvelle éphémère <code class="text-cyber-neonCyan">b_nouveau</code>. RK_1 = KDF(RK_0, DH(a, b_nouveau)).</div>
                         <p class="text-xs text-slate-400">Problème : <code class="text-cyber-neonRose">b_nouveau_pub</code> circule en clair, et l'attaquant possède déjà <code class="text-cyber-neonRose">a</code>. Il peut recalculer RK_1 lui-même : le canal n'est pas encore guéri.</p>
                     </div>
                 `
@@ -421,7 +421,7 @@ const pcsScenarios = {
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonCyan space-y-3 glow-cyan">
                         <div class="text-xs font-mono text-cyber-neonCyan font-bold uppercase">Second tour de ratchet</div>
-                        <div class="text-sm text-slate-200">Au tour suivant, Alice génère sa propre nouvelle paire <code class="text-cyber-neonCyan">a_nouveau</code>. RK_2 = KDF(RK_1, DH(a_nouveau, b_nouveau)).</div>
+                        <div class="text-sm text-slate-200 break-words">Au tour suivant, Alice génère sa propre nouvelle paire <code class="text-cyber-neonCyan">a_nouveau</code>. RK_2 = KDF(RK_1, DH(a_nouveau, b_nouveau)).</div>
                         <p class="text-xs text-slate-400">Cette fois, l'attaquant ne possède ni a_nouveau ni b_nouveau : il ne peut plus suivre.</p>
                     </div>
                 `
@@ -431,7 +431,7 @@ const pcsScenarios = {
                 ratchetColor: "#00ff88",
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonGreen text-center space-y-4 glow-green">
-                        <span class="px-3 py-1 bg-cyber-neonGreen/20 text-cyber-neonGreen rounded-full text-xs font-mono font-bold">PCS Active - Canal Réparé</span>
+                        <span class="px-3 py-1 bg-cyber-neonGreen/20 text-cyber-neonGreen rounded-full text-xs font-mono font-bold inline-block">PCS Active - Canal Réparé</span>
                         <h3 class="text-base font-bold text-white">Sécurité restaurée après l'aller-retour complet</h3>
                         <p class="text-xs text-slate-300">Voler la clé DH active exige que <strong>les deux parties</strong> renouvellent leur propre paire avant que l'attaquant soit totalement exclu — soit un message dans chaque sens, pas un seul échange.</p>
                     </div>
@@ -457,7 +457,7 @@ const pcsScenarios = {
                 ratchetColor: "#ff2a85",
                 render: () => `
                     <div class="step-container bg-cyber-panel p-6 rounded-2xl border border-cyber-neonRose text-center space-y-4 glow-rose">
-                        <span class="px-3 py-1 bg-cyber-neonRose/20 text-cyber-neonRose rounded-full text-xs font-mono font-bold">Limite fondamentale du PCS</span>
+                        <span class="px-3 py-1 bg-cyber-neonRose/20 text-cyber-neonRose rounded-full text-xs font-mono font-bold inline-block">Limite fondamentale du PCS</span>
                         <h3 class="text-base font-bold text-white">Le Double Ratchet ne peut rien faire seul</h3>
                         <p class="text-xs text-slate-300">Dès qu'Alice génère a_nouveau, l'espion le lit immédiatement, avant même qu'il ne serve. Le PCS suppose une compromission ponctuelle (un instantané) ; un accès persistant demande une détection et un nettoyage externes (réinstallation, vérification du numéro de sécurité) — la cryptographie seule ne suffit pas.</p>
                     </div>
@@ -488,9 +488,6 @@ function renderCurrentStep() {
     // Render view canvas
     const viewport = document.getElementById('presentation-viewport');
     viewport.innerHTML = `
-        <div class="mb-4">
-            <h2 class="text-xs font-mono text-cyber-neonCyan uppercase tracking-widest mb-1">${mod.title}</h2>
-        </div>
         ${step.render()}
     `;
 
@@ -568,12 +565,7 @@ window.onload = () => {
     renderCurrentStep();
 };
 
-/* ================= ROUE À ROCHET + CLIQUET (géométrie exacte) =================
-   Principe : la position du cliquet n'est jamais "dessinée à la main".
-   À chaque image, on cherche l'angle du cliquet le plus fermé possible pour lequel
-   la distance minimale entre les contours du cliquet et de la roue reste >= GAP.
-   => le cliquet repose sur la roue, ne la traverse jamais, et se soulève
-   réellement quand une dent le pousse. Repère SVG : y vers le bas, angles horaires. */
+/* ================= ROUE À ROCHET + CLIQUET (géométrie exacte) ================= */
 const RATCHET = {
     cx: 45, cy: 50,            // centre de la roue
     rOuter: 32, rInner: 24,    // sommet / creux des dents
@@ -588,12 +580,10 @@ const RATCHET = {
     closeSpeed: 360            // vitesse de chute du cliquet (°/s)
 };
 RATCHET.step = 360 / RATCHET.teeth;
-// Trait de la roue + trait du cliquet : leurs bords extérieurs se touchent, sans se chevaucher
 RATCHET.gap = (RATCHET.wheelStroke + RATCHET.pawlStroke) / 2 + 0.15;
 
 const rDeg = d => d * Math.PI / 180;
 
-// Dents en "scie" : flanc de retenue radial, flanc de poussée incliné
 function ratchetWheelPoints(alpha) {
     const R = RATCHET, pts = [];
     for (let i = 0; i < R.teeth; i++) {
@@ -605,7 +595,6 @@ function ratchetWheelPoints(alpha) {
     return pts;
 }
 
-// Cliquet en repère local : bras le long de +x depuis l'axe, bec orienté vers +y (côté roue)
 function ratchetPawlLocal() {
     const L = RATCHET.armLen, h = RATCHET.clawH, f = RATCHET.clawFwd;
     return [
@@ -641,7 +630,6 @@ function pointInPoly(p, poly) {
     return inside;
 }
 
-// Distance minimale entre deux contours fermés (-1 si l'un est dans l'autre)
 function polyDistance(A, B) {
     if (pointInPoly(A[0], B) || pointInPoly(B[0], A)) return -1;
     let m = Infinity;
@@ -657,7 +645,6 @@ function polyDistance(A, B) {
     return m;
 }
 
-// Angle de cliquet le plus fermé qui ne touche pas la roue (null si introuvable)
 function solvePawlAngle(alpha) {
     const R = RATCHET, W = ratchetWheelPoints(alpha);
     const isFree = th => polyDistance(ratchetPawlPoints(th), W) >= R.gap;
@@ -674,7 +661,6 @@ function solvePawlAngle(alpha) {
     return lo;
 }
 
-// Cale la phase des dents pour que le cliquet retombe exactement à alpha = 0 (modulo une dent)
 function calibrateRatchetPhase() {
     const R = RATCHET;
     R.phase = 0;
@@ -693,10 +679,6 @@ function calibrateRatchetPhase() {
     R.phase = hi;
 }
 
-/* Deux instances de la MÊME roue (même géométrie, même cliquet) :
-   - sym : ratchet symétrique (chaîne KDF, CK -> MK)
-   - dh  : ratchet asymétrique (Diffie-Hellman, RK + paires de clés)
-   Seuls l'état d'animation et les éléments SVG cibles diffèrent. */
 const ratchetWheels = {
     sym: {
         color: '#00ff88', rotation: 0,
@@ -728,7 +710,6 @@ function ratchetFrame(W, now) {
     const dt = Math.min((now - A.last) / 1000, 0.05);
     A.last = now;
 
-    // 1) mouvement de la roue (avance, dépasse la dent, puis recule jusqu'au cliquet)
     const seg = A.segments[0];
     if (seg) {
         seg.t += dt * 1000;
@@ -737,7 +718,6 @@ function ratchetFrame(W, now) {
         if (k >= 1) { A.alpha = seg.to; A.segments.shift(); }
     }
 
-    // 2) cliquet : poussé instantanément par la roue, retombe avec une vitesse finie
     const solved = solvePawlAngle(A.alpha);
     if (solved !== null) {
         if (A.theta === null || solved < A.theta) A.theta = solved;
@@ -755,8 +735,8 @@ function ratchetFrame(W, now) {
 
 function triggerWheelAnimation(key) {
     const W = ratchetWheels[key], R = RATCHET, A = W.anim;
-    W.rotation += R.step;                          // une dent de plus
-    const target = W.rotation + R.restOffset;   // position de repos : cliquet contre le flanc
+    W.rotation += R.step;
+    const target = W.rotation + R.restOffset;
     const from = A.alpha;
     const dist = Math.max(target + R.overshoot - from, 1);
     const dur = Math.max(160, Math.min(560, 560 * dist / (R.step + R.overshoot)));
@@ -794,7 +774,6 @@ function renderRatchetTeeth(numTeeth = 10) {
     });
 }
 
-/* HUD : les deux roues restent visibles à chaque étape ; celle(s) qui tourne(nt) sont mises en avant */
 function updateRatchetHud(spinning) {
     const anyActive = spinning.length > 0;
     Object.keys(ratchetWheels).forEach(key => {
