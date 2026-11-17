@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Démonstrateur Pédagogique - Algorithme LZ77</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#131e32',
+                            900: '#0f172a',
+                            950: '#020617',
+                        },
+                        search: {
+                            bg: 'rgba(59, 130, 246, 0.15)',
+                            border: '#3b82f6',
+                            text: '#93c5fd'
+                        },
+                        lookahead: {
+                            bg: 'rgba(245, 158, 11, 0.15)',
+                            border: '#f59e0b',
+                            text: '#fde047'
+                        },
+                        match: {
+                            bg: 'rgba(16, 185, 129, 0.25)',
+                            border: '#10b981',
+                            text: '#6ee7b7'
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & Lucide Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #e2e8f0;
+        }
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        .char-box {
+            transition: all 0.2s ease;
+        }
+        .pulse-match {
+            animation: pulse-border 1.5s infinite;
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+            50% { border-color: #34d399; box-shadow: 0 0 18px rgba(52, 211, 153, 0.6); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-500 selection:text-white">
+
+    <!-- En-tête / Support de Présentation -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-blue-600/20 border border-blue-500/40 rounded-lg text-blue-400">
+                <i data-lucide="binary" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg text-slate-100 flex items-center gap-2">
+                    Démonstrateur LZ77 <span class="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium">Support Oral (10 min)</span>
+                </h1>
+                <p class="text-xs text-slate-400">Compression par dictionnaire à fenêtre glissante (Lempel-Ziv 1977)</p>
+            </div>
+        </div>
+
+        <!-- Navigation Onglets -->
+        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-sm">
+            <button id="tab-btn-comp" onclick="switchTab('compression')" class="px-4 py-1.5 rounded-lg font-medium transition flex items-center gap-2 bg-blue-600 text-white shadow-sm">
+                <i data-lucide="shrink" class="w-4 h-4"></i> 1. Compression
+            </button>
+            <button id="tab-btn-decomp" onclick="switchTab('decompression')" class="px-4 py-1.5 rounded-lg font-medium transition flex items-center gap-2 text-slate-400 hover:text-slate-200">
+                <i data-lucide="expand" class="w-4 h-4"></i> 2. Décompression
+            </button>
+        </div>
+    </header>
+
+    <!-- Conteneur Principal -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+        <!-- SECTION COMPRESSION -->
+        <div id="section-compression" class="space-y-6">
+
+            <!-- Panneau Réglages & Modèles de Texte -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Zone de saisie texte -->
+                <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-4 h-4 text-blue-400"></i> Texte d'entrée (Données brutes)
+                        </label>
+                        <span id="input-length-badge" class="text-xs code-font px-2 py-0.5 rounded bg-slate-800 text-slate-400">0 caractère(s)</span>
+                    </div>
+
+                    <textarea id="input-text" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 code-font text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition resize-none" placeholder="Saisissez un texte ou choisissez un pré-réglage ci-dessous..."></textarea>
+
+                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                        <span class="text-xs text-slate-400 font-medium">Préréglages :</span>
+                        <button onclick="loadPreset('repetitive')" class="px-2.5 py-1 text-xs rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-slate-300 transition">Répétition directe</button>
+                        <button onclick="loadPreset('natural')" class="px-2.5 py-1 text-xs rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-slate-300 transition">Texte naturel (Français)</button>
+                        <button onclick="loadPreset('redundant')" class="px-2.5 py-1 text-xs rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-slate-300 transition">Forte redondance</button>
+                        <button onclick="loadPreset('random')" class="px-2.5 py-1 text-xs rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-slate-300 transition">Données Aléatoires</button>
+                    </div>
+                </div>
+
+                <!-- Réglages Paramètres LZ77 -->
+                <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                    <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-4 h-4 text-amber-400"></i> Paramètres de la fenêtre
+                    </h3>
+
+                    <div class="space-y-3">
+                        <!-- Search Window Size -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-slate-300">Fenêtre de Recherche (Search Window):</span>
+                                <span id="val-search-window" class="code-font text-blue-400 font-bold">12 car.</span>
+                            </div>
+                            <input type="range" id="param-search-window" min="4" max="32" step="2" value="12" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500" oninput="updateParams()">
+                        </div>
+
+                        <!-- Lookahead Buffer Size -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-slate-300">Tampon d'Anticipation (Lookahead Buffer):</span>
+                                <span id="val-lookahead-buffer" class="code-font text-amber-400 font-bold">6 car.</span>
+                            </div>
+                            <input type="range" id="param-lookahead-buffer" min="3" max="16" step="1" value="6" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500" oninput="updateParams()">
+                        </div>
+
+                        <!-- Min Match Length -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-slate-300">Longueur Minimale de Match (Min Match):</span>
+                                <span id="val-min-match" class="code-font text-emerald-400 font-bold">1 car.</span>
+                            </div>
+                            <input type="range" id="param-min-match" min="1" max="4" step="1" value="1" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500" oninput="updateParams()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barre de Contrôle du Déroulement / Animation -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <button id="btn-reset" onclick="resetCompression()" class="p-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition" title="Réinitialiser">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    </button>
+                    <button id="btn-step-prev" onclick="stepCompression(-1)" class="p-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition" title="Pas précédent">
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </button>
+                    <button id="btn-play" onclick="togglePlay()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-medium text-white transition flex items-center gap-2">
+                        <i id="icon-play" data-lucide="play" class="w-4 h-4"></i> <span id="text-play">Lecture</span>
+                    </button>
+                    <button id="btn-step-next" onclick="stepCompression(1)" class="p-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition" title="Pas suivant">
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                    <button id="btn-finish" onclick="finishCompression()" class="px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition">
+                        Tout exécuter
+                    </button>
+                </div>
+
+                <!-- Indicateur d'étape -->
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-slate-400">Vitesse :</span>
+                    <input type="range" id="param-speed" min="100" max="1500" step="100" value="600" class="w-24 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                    <div class="h-4 w-px bg-slate-800"></div>
+                    <span class="text-xs text-slate-400">Étape : <strong id="step-counter" class="text-slate-100 code-font">0 / 0</strong></span>
+                </div>
+            </div>
+
+            <!-- VISUALISATEUR DE FENÊTRE GLISSANTE -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        <i data-lucide="eye" class="w-4 h-4 text-blue-400"></i> Visualisation en direct de la Fenêtre Glissante
+                    </h3>
+                    <!-- Légende visuelle -->
+                    <div class="flex flex-wrap items-center gap-4 text-xs">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded bg-blue-500/30 border border-blue-500 inline-block"></span>
+                            <span class="text-slate-300">Dictionnaire (Search Window)</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded bg-amber-500/30 border border-amber-500 inline-block"></span>
+                            <span class="text-slate-300">Anticipation (Lookahead)</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded bg-emerald-500/40 border border-emerald-500 inline-block"></span>
+                            <span class="text-slate-300">Correspondance (Match)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ruban des Caractères -->
+                <div class="relative bg-slate-950 p-4 rounded-xl border border-slate-800 overflow-x-auto min-h-[110px] flex items-center">
+                    <div id="tape-container" class="flex gap-1.5 min-w-full justify-start items-center py-2">
+                        <!-- Injecté dynamiquement par JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Explication du pas en cours -->
+                <div id="step-explanation" class="p-3.5 bg-slate-950/60 border border-slate-800/80 rounded-xl text-xs text-slate-300 flex items-start gap-3">
+                    <i data-lucide="info" class="w-4 h-4 text-blue-400 shrink-0 mt-0.5"></i>
+                    <div id="step-explanation-text">Cliquez sur <strong>Lecture</strong> ou <strong>Pas suivant</strong> pour démarrer l'observation de l'algorithme LZ77.</div>
+                </div>
+            </div>
+
+            <!-- TABLEAU DES TUPLES N-GRAMMES PRODUITS -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            <i data-lucide="list" class="w-4 h-4 text-emerald-400"></i> Triplets générés (D, L, C)
+                        </h3>
+                        <span class="text-xs text-slate-400">Format: (Décalage / Distance, Longueur, Prochain Caractère)</span>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-64 overflow-y-auto rounded-xl border border-slate-800">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-slate-950 text-slate-400 sticky top-0 border-b border-slate-800">
+                                <tr>
+                                    <th class="p-2.5 font-medium">#</th>
+                                    <th class="p-2.5 font-medium">Décalage (D)</th>
+                                    <th class="p-2.5 font-medium">Longueur (L)</th>
+                                    <th class="p-2.5 font-medium">Prochain Car. (C)</th>
+                                    <th class="p-2.5 font-medium">Représentation Tuple</th>
+                                    <th class="p-2.5 font-medium">Texte encodé par ce tuple</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tuple-table-body" class="divide-y divide-slate-800/50 code-font text-slate-300">
+                                <!-- Tuples dynamiques -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Synthèse rapide compression -->
+                <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                    <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-4 h-4 text-blue-400"></i> Bilan du processus
+                    </h3>
+
+                    <div class="space-y-3">
+                        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800/80 flex justify-between items-center">
+                            <span class="text-xs text-slate-400">Taille initiale :</span>
+                            <span id="metric-raw-size" class="text-sm font-bold code-font text-slate-200">0 octets</span>
+                        </div>
+                        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800/80 flex justify-between items-center">
+                            <span class="text-xs text-slate-400">Nombre de Tuples :</span>
+                            <span id="metric-tuples-count" class="text-sm font-bold code-font text-blue-400">0</span>
+                        </div>
+                        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800/80 flex justify-between items-center">
+                            <span class="text-xs text-slate-400">Taille estimée compressée :</span>
+                            <span id="metric-compressed-size" class="text-sm font-bold code-font text-emerald-400">0 octets</span>
+                        </div>
+                        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800/80 flex justify-between items-center">
+                            <span class="text-xs text-slate-400">Taux de compression :</span>
+                            <span id="metric-ratio" class="text-sm font-bold code-font text-amber-400">0 %</span>
+                        </div>
+                    </div>
+
+                    <button onclick="switchTab('decompression')" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition flex items-center justify-center gap-2">
+                        Tester la décompression sans perte <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SECTION DECOMPRESSION -->
+        <div id="section-decompression" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                        <i data-lucide="expand" class="w-5 h-5 text-emerald-400"></i> Module de Décompression Pas à Pas
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Reconstruction exacte de la chaîne originale uniquement basée sur la séquence de tuples <span class="code-font text-slate-300">(Offset, Length, Next)</span>.</p>
+                </div>
+
+                <!-- Contrôles Décompression -->
+                <div class="flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <button onclick="decompStep(-1)" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                    <button onclick="decompStep(1)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-medium text-xs text-white rounded-lg flex items-center gap-1.5"><i data-lucide="play" class="w-3.5 h-3.5"></i> Décoder le tuple suivant</button>
+                    <button onclick="decompReset()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200" title="Réinitialiser"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+                    <span class="text-xs text-slate-400 ml-auto">Tuple reconstruit : <strong id="decomp-step-counter" class="text-emerald-400 code-font">0 / 0</strong></span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Entrée : Liste des Tuples à décoder -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-semibold text-slate-300">Séquence de Tuples reçue (Compressed Input) :</label>
+                        <div id="decomp-tuples-list" class="p-3 bg-slate-950 border border-slate-800 rounded-xl max-h-48 overflow-y-auto space-y-1.5 code-font text-xs">
+                            <!-- Tuples -->
+                        </div>
+                    </div>
+
+                    <!-- Sortie : Texte Reconstruit -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-semibold text-slate-300">Texte en cours de reconstruction (Reconstructed Output) :</label>
+                        <div id="decomp-output-buffer" class="p-3 bg-slate-950 border border-slate-800 rounded-xl min-h-[120px] code-font text-sm text-emerald-400 break-all">
+                            <!-- Texte reconstruit -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statut sans perte -->
+                <div id="decomp-status" class="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs flex items-center justify-between">
+                    <span class="text-slate-400">Vérification de l'intégrité (Lossless check) :</span>
+                    <span id="decomp-integrity-badge" class="font-semibold text-slate-500">En attente d'exécution</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Pied de Page -->
+    <footer class="border-t border-slate-800 bg-slate-900/50 py-4 text-center text-xs text-slate-500">
+        Démonstrateur Interactif LZ77 &bull; Conçu pour Explication Pédagogique et Présentation Orale
+    </footer>
+
+    <!-- LOGIQUE JAVASCRIPT LZ77 COMPLÈTE -->
+    <script>
+        // --- ÉTAT GLOBAL DE L'APPLICATION ---
+        const state = {
+            inputText: "",
+            searchWindowSize: 12,
+            lookaheadBufferSize: 6,
+            minMatchLength: 1,
+            steps: [],          // Étapes de compression enregistrées
+            currentStep: 0,
+            isPlaying: false,
+            playTimer: null,
+            tuples: [],
+            decompStep: 0,
+            decompText: "",
+            compTimeMs: 0,
+            decompTimeMs: 0
+        };
+
+        // PRESETS DE TEXTE
+        const PRESETS = {
+            repetitive: "ABABABABABABABABABAB",
+            natural: "Le petit chat boit du lait. Le petit chat dort paisiblement.",
+            redundant: "AAAAAAAABBBBBBBBCCCCCCCC",
+            random: "XJ9k2LqM7zP4vR8w"
+        };
+
+        // --- INITIALISATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            loadPreset('natural');
+            
+            document.getElementById('input-text').addEventListener('input', (e) => {
+                state.inputText = e.target.value;
+                document.getElementById('input-length-badge').innerText = `${state.inputText.length} caractère(s)`;
+                recalculateCompression();
+            });
+        });
+
+        function loadPreset(type) {
+            const text = PRESETS[type] || "";
+            document.getElementById('input-text').value = text;
+            state.inputText = text;
+            document.getElementById('input-length-badge').innerText = `${text.length} caractère(s)`;
+            recalculateCompression();
+        }
+
+        function updateParams() {
+            state.searchWindowSize = parseInt(document.getElementById('param-search-window').value);
+            state.lookaheadBufferSize = parseInt(document.getElementById('param-lookahead-buffer').value);
+            state.minMatchLength = parseInt(document.getElementById('param-min-match').value);
+
+            document.getElementById('val-search-window').innerText = `${state.searchWindowSize} car.`;
+            document.getElementById('val-lookahead-buffer').innerText = `${state.lookaheadBufferSize} car.`;
+            document.getElementById('val-min-match').innerText = `${state.minMatchLength} car.`;
+
+            recalculateCompression();
+        }
+
+        // --- MOTEUR DE COMPRESSION LZ77 ---
+        function recalculateCompression() {
+            pausePlay();
+            const text = state.inputText;
+            state.steps = [];
+            state.tuples = [];
+
+            if (!text) {
+                renderTape();
+                renderTuples();
+                updateMetrics();
+                prepareDecompression();
+                return;
+            }
+
+            const startTime = performance.now();
+            let cursor = 0;
+
+            while (cursor < text.length) {
+                const searchStart = Math.max(0, cursor - state.searchWindowSize);
+                const searchWindow = text.substring(searchStart, cursor);
+                const lookaheadWindow = text.substring(cursor, cursor + state.lookaheadBufferSize);
+
+                let bestOffset = 0;
+                let bestLength = 0;
+
+                // Recherche de la plus longue correspondance dans la fenêtre de recherche
+                for (let i = 0; i < searchWindow.length; i++) {
+                    let length = 0;
+                    while (
+                        length < lookaheadWindow.length &&
+                        cursor + length < text.length &&
+                        text[searchStart + i + length] === text[cursor + length]
+                    ) {
+                        length++;
+                    }
+
+                    if (length >= state.minMatchLength && length > bestLength) {
+                        bestLength = length;
+                        bestOffset = searchWindow.length - i;
+                    }
+                }
+
+                // S'assurer de ne pas dépasser la chaîne avec Next Char
+                let nextChar = "";
+                if (cursor + bestLength < text.length) {
+                    nextChar = text[cursor + bestLength];
+                } else {
+                    nextChar = "";
+                }
+
+                const tuple = {
+                    offset: bestOffset,
+                    length: bestLength,
+                    nextChar: nextChar,
+                    matchedStr: text.substring(cursor, cursor + bestLength)
+                };
+
+                state.tuples.push(tuple);
+
+                // Enregistrer l'état du pas courant pour la visualisation
+                state.steps.push({
+                    cursor: cursor,
+                    searchStart: searchStart,
+                    searchEnd: cursor,
+                    lookaheadStart: cursor,
+                    lookaheadEnd: Math.min(text.length, cursor + state.lookaheadBufferSize),
+                    matchOffset: bestOffset,
+                    matchLength: bestLength,
+                    matchIndexInSearch: bestOffset > 0 ? (cursor - bestOffset) : -1,
+                    tuple: tuple
+                });
+
+                // Avancer le pointeur : Longueur du match + 1 caractère explicité
+                cursor += bestLength + 1;
+            }
+
+            const endTime = performance.now();
+            state.compTimeMs = (endTime - startTime).toFixed(2);
+
+            state.currentStep = 0;
+            renderTape();
+            renderTuples();
+            updateMetrics();
+            prepareDecompression();
+        }
+
+        // --- VISUALISATION INTERACTIVE DU RUBAN (TAPE) ---
+        function renderTape() {
+            const container = document.getElementById('tape-container');
+            container.innerHTML = '';
+
+            const text = state.inputText;
+            if (!text) {
+                container.innerHTML = `<span class="text-xs text-slate-500 italic">Veuillez saisir un texte pour lancer la simulation.</span>`;
+                return;
+            }
+
+            const currentStepData = state.steps[state.currentStep] || {
+                cursor: 0,
+                searchStart: 0,
+                searchEnd: 0,
+                lookaheadStart: 0,
+                lookaheadEnd: Math.min(text.length, state.lookaheadBufferSize),
+                matchOffset: 0,
+                matchLength: 0,
+                matchIndexInSearch: -1,
+                tuple: null
+            };
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const charBox = document.createElement('div');
+                charBox.className = "char-box flex flex-col items-center justify-center w-8 h-12 rounded-lg border text-xs font-mono font-bold transition-all relative shrink-0";
+
+                let isSearch = i >= currentStepData.searchStart && i < currentStepData.searchEnd;
+                let isLookahead = i >= currentStepData.lookaheadStart && i < currentStepData.lookaheadEnd;
+                let isMatch = currentStepData.matchLength > 0 && 
+                              ((i >= currentStepData.matchIndexInSearch && i < currentStepData.matchIndexInSearch + currentStepData.matchLength) ||
+                               (i >= currentStepData.cursor && i < currentStepData.cursor + currentStepData.matchLength));
+
+                let isCursor = (i === currentStepData.cursor);
+
+                // Application du style visuel
+                if (isMatch) {
+                    charBox.className += " bg-emerald-500/20 border-emerald-500 text-emerald-300 pulse-match";
+                } else if (isSearch) {
+                    charBox.className += " bg-blue-500/15 border-blue-500/60 text-blue-300";
+                } else if (isLookahead) {
+                    charBox.className += " bg-amber-500/15 border-amber-500/60 text-amber-300";
+                } else {
+                    charBox.className += " bg-slate-900 border-slate-800 text-slate-500 opacity-60";
+                }
+
+                // Caractère visible (Espace explicite)
+                const charDisplay = char === ' ' ? '␣' : char;
+                
+                charBox.innerHTML = `
+                    <span>${charDisplay}</span>
+                    <span class="text-[9px] font-normal text-slate-500 absolute bottom-0.5">${i}</span>
+                `;
+
+                // Badge de curseur
+                if (isCursor) {
+                    const badge = document.createElement('div');
+                    badge.className = "absolute -top-3 w-2 h-2 bg-amber-400 rounded-full animate-bounce";
+                    charBox.appendChild(badge);
+                }
+
+                container.appendChild(charBox);
+            }
+
+            // Mettre à jour l'explication sous le ruban
+            updateExplanation(currentStepData);
+
+            // Mettre à jour le compteur d'étapes
+            document.getElementById('step-counter').innerText = `${state.steps.length > 0 ? state.currentStep + 1 : 0} / ${state.steps.length}`;
+        }
+
+        function updateExplanation(stepData) {
+            const expText = document.getElementById('step-explanation-text');
+            if (!stepData || !stepData.tuple) {
+                expText.innerHTML = "Prêt à démarrer l'analyse pas à pas.";
+                return;
+            }
+
+            const t = stepData.tuple;
+            const charDisp = t.nextChar === ' ' ? '␣ (Espace)' : (t.nextChar ? `'${t.nextChar}'` : 'FIN');
+
+            if (t.length > 0) {
+                expText.innerHTML = `<strong>Correspondance trouvée !</strong> Motif répété : <span class="code-font text-emerald-400 font-bold">"${t.matchedStr}"</span>. L'algorithme remonte de <strong>${t.offset}</strong> caractère(s) en arrière dans la fenêtre de recherche et copie <strong>${t.length}</strong> caractère(s). Prochain caractère : <span class="code-font text-amber-400 font-bold">${charDisp}</span>. Tuple produit : <span class="code-font text-emerald-400 font-bold">(${t.offset}, ${t.length}, "${t.nextChar}")</span>`;
+            } else {
+                expText.innerHTML = `<strong>Aucune récurrence suffisante trouvée</strong> dans le dictionnaire. Production d'un caractère littéral. Prochain caractère : <span class="code-font text-amber-400 font-bold">${charDisp}</span>. Tuple produit : <span class="code-font text-blue-400 font-bold">(0, 0, "${t.nextChar}")</span>`;
+            }
+        }
+
+        // --- RENDU DE LA TABLE DES TUPLES ---
+        function renderTuples() {
+            const tbody = document.getElementById('tuple-table-body');
+            tbody.innerHTML = '';
+
+            state.tuples.forEach((t, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index === state.currentStep ? "bg-blue-600/20 font-semibold text-white" : "hover:bg-slate-800/40";
+                
+                const charDisp = t.nextChar === ' ' ? '␣' : (t.nextChar || '∅');
+                const encodedText = (t.matchedStr || '') + (t.nextChar || '');
+
+                tr.innerHTML = `
+                    <td class="p-2.5 text-slate-500">${index + 1}</td>
+                    <td class="p-2.5 text-blue-400">${t.offset}</td>
+                    <td class="p-2.5 text-emerald-400">${t.length}</td>
+                    <td class="p-2.5 text-amber-400">'${charDisp}'</td>
+                    <td class="p-2.5"><span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-200 font-bold">(${t.offset}, ${t.length}, '${charDisp}')</span></td>
+                    <td class="p-2.5 text-slate-300 font-mono">"${encodedText}"</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- CALCUL DES MÉTRIQUES ---
+        function updateMetrics() {
+            const rawSize = state.inputText.length;
+            const tuplesCount = state.tuples.length;
+            const compressedSize = tuplesCount * 3;
+            
+            const ratio = rawSize > 0 ? ((1 - (compressedSize / rawSize)) * 100).toFixed(1) : 0;
+            const compFactor = compressedSize > 0 ? (rawSize / compressedSize).toFixed(2) : '1.00';
+
+            document.getElementById('metric-raw-size').innerText = `${rawSize} octets (${rawSize} chars)`;
+            document.getElementById('metric-tuples-count').innerText = `${tuplesCount}`;
+            document.getElementById('metric-compressed-size').innerText = `${compressedSize} octets (~3 octets/tuple)`;
+            
+            const ratioElem = document.getElementById('metric-ratio');
+            ratioElem.innerText = `${ratio}%`;
+            if (ratio > 0) {
+                ratioElem.className = "text-sm font-bold code-font text-emerald-400";
+            } else {
+                ratioElem.className = "text-sm font-bold code-font text-rose-400";
+            }
+        }
+
+        // --- ANIMATION / PAS À PAS COMPRESSION ---
+        function stepCompression(dir) {
+            pausePlay();
+            const newStep = state.currentStep + dir;
+            if (newStep >= 0 && newStep < state.steps.length) {
+                state.currentStep = newStep;
+                renderTape();
+                renderTuples();
+            }
+        }
+
+        function resetCompression() {
+            pausePlay();
+            state.currentStep = 0;
+            renderTape();
+            renderTuples();
+        }
+
+        function finishCompression() {
+            pausePlay();
+            if (state.steps.length > 0) {
+                state.currentStep = state.steps.length - 1;
+                renderTape();
+                renderTuples();
+            }
+        }
+
+        function togglePlay() {
+            if (state.isPlaying) {
+                pausePlay();
+            } else {
+                startPlay();
+            }
+        }
+
+        function startPlay() {
+            if (state.steps.length === 0) return;
+            if (state.currentStep >= state.steps.length - 1) {
+                state.currentStep = 0;
+            }
+            state.isPlaying = true;
+            document.getElementById('icon-play').setAttribute('data-lucide', 'pause');
+            document.getElementById('text-play').innerText = "Pause";
+            lucide.createIcons();
+
+            const speed = parseInt(document.getElementById('param-speed').value);
+            state.playTimer = setInterval(() => {
+                if (state.currentStep < state.steps.length - 1) {
+                    state.currentStep++;
+                    renderTape();
+                    renderTuples();
+                } else {
+                    pausePlay();
+                }
+            }, speed);
+        }
+
+        function pausePlay() {
+            state.isPlaying = false;
+            if (state.playTimer) clearInterval(state.playTimer);
+            document.getElementById('icon-play').setAttribute('data-lucide', 'play');
+            document.getElementById('text-play').innerText = "Lecture";
+            lucide.createIcons();
+        }
+
+        // --- MODULE DE DÉCOMPRESSION (CORRIGÉ) ---
+        function prepareDecompression() {
+            state.decompStep = 0;
+            state.decompText = "";
+            renderDecompression();
+        }
+
+        function renderDecompression() {
+            const container = document.getElementById('decomp-tuples-list');
+            container.innerHTML = '';
+
+            state.tuples.forEach((t, i) => {
+                const item = document.createElement('div');
+                const isCurrent = i === state.decompStep - 1;
+                const isPast = i < state.decompStep;
+
+                item.className = `p-2 rounded-lg border flex items-center justify-between ${
+                    isCurrent ? 'bg-emerald-500/20 border-emerald-500 text-emerald-200' :
+                    isPast ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-slate-950 border-slate-800/60 text-slate-300'
+                }`;
+
+                const charDisp = t.nextChar === ' ' ? '␣' : (t.nextChar || '∅');
+                item.innerHTML = `
+                    <span>Tuple #${i + 1}: <strong>(${t.offset}, ${t.length}, '${charDisp}')</strong></span>
+                    <span class="text-[10px] text-slate-500">${isPast ? 'Décodé' : 'En attente'}</span>
+                `;
+                container.appendChild(item);
+            });
+
+            document.getElementById('decomp-output-buffer').innerText = state.decompText || "(Buffer vide)";
+            document.getElementById('decomp-step-counter').innerText = `${state.decompStep} / ${state.tuples.length}`;
+
+            // Vérification sans perte corrigée
+            const badge = document.getElementById('decomp-integrity-badge');
+            if (state.decompStep === state.tuples.length && state.tuples.length > 0) {
+                if (state.decompText === state.inputText) {
+                    badge.innerHTML = `<span class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">✓ Intégrité Parfaite (Reconstitution 100% Identique)</span>`;
+                } else {
+                    badge.innerHTML = `<span class="px-2 py-1 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold">✕ Erreur de Reconstitution</span>`;
+                }
+            } else {
+                badge.innerHTML = `<span class="text-slate-500 font-normal">Décompression en cours...</span>`;
+            }
+        }
+
+        function decompStep(dir) {
+            const targetStep = state.decompStep + dir;
+            if (targetStep < 0 || targetStep > state.tuples.length) return;
+
+            const startTime = performance.now();
+
+            // Reconstitution exacte en s'appuyant sur le décalage correct par rapport au buffer cumulé
+            let rebuilt = "";
+            for (let i = 0; i < targetStep; i++) {
+                const t = state.tuples[i];
+                if (t.length > 0) {
+                    const startIdx = rebuilt.length - t.offset;
+                    for (let j = 0; j < t.length; j++) {
+                        rebuilt += rebuilt[startIdx + j];
+                    }
+                }
+                if (t.nextChar !== "") {
+                    rebuilt += t.nextChar;
+                }
+            }
+
+            const endTime = performance.now();
+            state.decompTimeMs = (endTime - startTime).toFixed(2);
+
+            state.decompStep = targetStep;
+            state.decompText = rebuilt;
+            renderDecompression();
+        }
+
+        function decompReset() {
+            state.decompStep = 0;
+            state.decompText = "";
+            renderDecompression();
+        }
+
+        // --- GESTION DES ONGLETS ---
+        function switchTab(tabName) {
+            document.getElementById('section-compression').classList.add('hidden');
+            document.getElementById('section-decompression').classList.add('hidden');
+
+            document.getElementById('tab-btn-comp').className = "px-4 py-1.5 rounded-lg font-medium transition flex items-center gap-2 text-slate-400 hover:text-slate-200";
+            document.getElementById('tab-btn-decomp').className = "px-4 py-1.5 rounded-lg font-medium transition flex items-center gap-2 text-slate-400 hover:text-slate-200";
+
+            if (tabName === 'compression') {
+                document.getElementById('section-compression').classList.remove('hidden');
+                document.getElementById('tab-btn-comp').className = "px-4 py-1.5 rounded-lg font-medium transition flex items-center gap-2 bg-blue-600 text-white shadow-sm";
+            } else if (tabName === 'decompression') {
+                document.getElementById('section-decompression').classList.remove('hidden');
+                document.getElementById('tab-btn-decomp').className = "px-4 py-1.5 rounded-lg font-medium transition flex items-center gap-2 bg-emerald-600 text-white shadow-sm";
+            }
+        }
+    </script>
+</body>
+</html>
